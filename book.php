@@ -1,40 +1,69 @@
-    <?php
+<?php
 
-require_once 'connection.php';
+require_once('./connection.php');
 
-if (isset($_GET['id'])) {
-    $book_id = ($_GET['id']);
-    echo "<h1>Book ID: " . $book_id . "</h1>";
-} else {
-    echo "<h1>No book selected.</h1>";
+if ( !isset($_GET['id']) || !$_GET['id'] ) {
+    echo 'Viga: raamatut ei leitud!';
+    exit();
 }
 
-if (isset($_GET['title']) && isset($_GET['author']) && isset($_GET['pages'])) {
-    $title = $_GET['title'];
-    $author = $_GET['author'];
-    $pages = $_GET['pages'];
-
-    echo "<h2>Title: " . $title . "</h2>";
-    echo "<h3>Author: " . $author . "</h3>";
-    echo "<p>Pages: " . $pages . "</p>";
-}
-
+$id = $_GET['id'];
 
 $stmt = $pdo->prepare('SELECT * FROM books WHERE id = :id');
 $stmt->execute(['id' => $id]);
+$book = $stmt->fetch();
 
-$stmt = $pdo->prepare('SELECT * FROM books WHERE pages = :pages');
-$stmt->execute(['pages' => $pages]);
+$stmt = $pdo->prepare('SELECT a.id, a.first_name, a.last_name FROM book_authors ba LEFT JOIN authors a ON ba.author_id = a.id WHERE ba.book_id = :book_id');
+$stmt->execute(['book_id' => $id]);
+$authors = $stmt->fetchAll();
 
-$stmt = $pdo->prepare('SELECT * FROM books WHERE author = :author');
-$stmt->execute(['author' => $author]);
+?>
 
-$stmt = $pdo->prepare('SELECT * FROM books WHERE title = :title');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($book['title']) ?></title>
+</head>
+<body>
+    <h1><?= htmlspecialchars($book['title']) ?></h1>
 
-$stmt->execute(['title' => $title]);
+    <h2>Raamatu info</h2>
+    <p>Pealkiri: <?= htmlspecialchars($book['title'] ?? '') ?></p>
+    <p>Aasta: <?= htmlspecialchars($book['year'] ?? $book['release_date'] ?? '') ?></p>
+    <p>Tüüp: <?= htmlspecialchars($book['type'] ?? $book['publisher'] ?? '') ?></p>
+    <p>Hind: <?= !empty($book['price']) ? (number_format($book['price'], 2, ',', ' ')) . ' €' : '' ?></p>
+    <p>Lehekülgi: <?= htmlspecialchars($book['pages'] ?? $book['quantity'] ?? '') ?></p>
+    <p>Keel: <?= htmlspecialchars($book['language'] ?? $book['isbn'] ?? '') ?></p>
+    <p>Sisu: <?= htmlspecialchars($book['summary'] ?? $book['description'] ?? '') ?></p>
+    <?php if (!empty($book['cover_path']) || !empty($book['image'])): ?>
+        <p>Pilt:</p>
+        <img src="<?= htmlspecialchars($book['cover_path'] ?? $book['image']) ?>" alt="<?= htmlspecialchars($book['title']) ?>" style="max-width:200px; height:auto;">
+    <?php else: ?>
+        <p>Puudub pilt</p>
+    <?php endif; ?>
 
-$book = $stmt->fetchAll();
-var_dump($book);
+    <h2>Autorid</h2>
+    <ul>
+        <?php foreach ($authors as $author): ?>
+            <li>
+                <?= htmlspecialchars($author['first_name'] . ' ' . $author['last_name']) ?>
+            </li>
+        <?php endforeach; ?>
+    </ul>
 
-?>  
+    <a href="./edit.php?id=<?= $id ?>">Muuda</a>
+    <br>
 
+    <form action="./delete.php" method="POST">
+        <input type="hidden" name="id" value="<?= $id; ?>">
+        <button type="submit" name="action" value="delete" onclick="return confirm('Oled kindel, et tahad kustutada?');">Kustuta raamat</button>   
+    </form>
+    
+    <a href="index.php">    
+        <button>Tagasi</button>
+    </a>
+
+</body>
+</html>

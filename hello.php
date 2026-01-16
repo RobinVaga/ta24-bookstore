@@ -1,28 +1,27 @@
-<?php // kirjutatakse nende koodide vahele
+<?php
 
 // var_dump($_POST);
 
-if ( isset($_POST['action-submit']) && isset($_POST["username"]) ) {
-    
-    $user = $_POST["username"];
+if ( isset($_POST['action-submit']) && isset($_POST['user-name']) ) {
+
+    $user = $_POST["user-name"];
 
 }
 
-$names = [ 'Tiit', 'Taavi', 'Bob', 'Rainer', 'Tõnu' ];
+$names = ['Tiit', 'Taavi', 'Tõnu', 'Madis', 'Rainer'];
 
-foreach ( $names as $key => $name) {    // loopimismeetodid
+foreach ( $names as $key => $name ) {
     echo ($key + 1) . ". {$name}<br>";
 }
 
-for ( $i = 0; $i < sizeof($names); $i++ ) {
+for ( $i = 0; $i < count($names); $i++ ) {
     echo ($i + 1) . ". {$names[$i]}<br>";
 }
 
 $i = 0;
-while ( $i < count($names) ) {
-
-    $i++;
+while ( $i < count($names) )  {
     echo ($i + 1) . ". {$names[$i]}<br>";
+    $i++;
 }
 
 $i = 0;
@@ -42,20 +41,18 @@ do {
 </head>
 <body>
     
-    <form action="./hello.php" method="POST">
+    <form action="./hello.php" method="GET">
 
         <label for="user">Nimi:</label>
-        <input type="text" name="username" id="user">
+        <input type="text" name="user-name" id="user">
         <input type="submit" name="action-submit" value="Saada">
-
     </form>
-    
-    <?php if ( isset($user) ) { ?>
 
+    <?php if ( isset($user) ) { ?>
+        
         Hello, <?= $user; ?>!
-    
+        
     <?php } ?>
-    
 
 </body>
 </html>
